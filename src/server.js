@@ -141,8 +141,6 @@ module.exports = class kurentoRoom {
 			}
 	
 			if (presenter === null) {
-				console.log('1:',room_name);
-				
 				self.stop(sessionId, room_name, name);
 				return callback(noPresenterMessage);
 			}
@@ -167,7 +165,16 @@ module.exports = class kurentoRoom {
 				})
 				self.saveData(room);
 				presenter[room_name].pipeline = pipeline;
-				pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint) {
+
+				var elements =
+				[
+					{type: 'RecorderEndpoint', params: {uri : self.argv.file_uri, mediaPipeline: pipeline, stopOnEndOfStream: true}},
+					{type: 'WebRtcEndpoint', params: {}}
+				]
+				console.log(self.argv.file_uri);
+				
+				pipeline.create(elements, function(error, elements) {
+					
 					if (error) {
 						self.stop(sessionId, room_name, name);
 						return callback(error);
@@ -176,6 +183,9 @@ module.exports = class kurentoRoom {
 					if (presenter === null) {
 						return callback(noPresenterMessage);
 					}
+					
+					var recorder = elements[0];
+					var webRtcEndpoint = elements[1];
 	
 					presenter[room_name].webRtcEndpoint = webRtcEndpoint;
 					if (candidatesQueue[sessionId]) {
@@ -213,10 +223,26 @@ module.exports = class kurentoRoom {
 							return callback(error);
 						}
 					});
+
+					kurentoClient.connect(webRtcEndpoint, recorder, function(error) {
+						if (error) return self.onError(error);
+					
+						presenter[room_name].recorder = recorder;
+
+						recorder.record(function(error) {
+							if (error) return onError(error);
+					  
+							console.log("record");
+						  });
+					});
 				});
 			});
 		});
 	}
+
+	onError(error) {
+		if(error) console.log(error);
+	  }
 
 	saveData(room){
 		let promise = room.save();
@@ -318,7 +344,12 @@ module.exports = class kurentoRoom {
 					}));
 				}
 			}
+			presenter[room_name].recorder.stopAndWait( (error) => {
+				console.log(error);
+			});
+			// presenter[room_name].recorder.release();
 			presenter[room_name].pipeline.release();
+
 			delete presenter[room_name];
 			viewers = [];
 			
@@ -367,5 +398,3 @@ module.exports = class kurentoRoom {
 		}
 	}
 }
-
-// app.use(express.static(path.join(__dirname, 'static')));

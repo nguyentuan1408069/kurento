@@ -18,7 +18,8 @@ module.exports = (app) => {
         default: {
             as_uri: `${process.env.AS_URI}`,
             ws_uri: `${process.env.WS_URI}`,
-            file_uri: `${process.env.FILE_URI}`,
+            // file_uri: `${process.env.FILE_URI}`,
+            file_uri: 'file:///tmp/recorder_demo.webm',
         }
     });
     
