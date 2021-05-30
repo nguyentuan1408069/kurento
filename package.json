@@ -12,7 +12,7 @@
     "minimist": "^1.1.1",
     "mongoose": "^5.9.19",
     "morgan": "^1.10.0",
-    "ws": "^7.1.0"
+    "ws": "^7.4.6"
   },
   "devDependencies": {
     "bower": "^1.4.1"
